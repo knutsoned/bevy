@@ -1,14 +1,14 @@
 use std::num::NonZeroU32;
 
 use bevy_ecs::{
-    entity::{Entity, EntityMapper, MapEntities},
-    prelude::{Component, ReflectComponent},
+    entity::{ Entity, EntityMapper, MapEntities },
+    prelude::{ Component, ReflectComponent },
 };
-use bevy_math::{DVec2, IVec2, UVec2, Vec2};
-use bevy_reflect::{std_traits::ReflectDefault, Reflect};
+use bevy_math::{ DVec2, IVec2, UVec2, Vec2 };
+use bevy_reflect::{ std_traits::ReflectDefault, Reflect };
 
 #[cfg(feature = "serialize")]
-use bevy_reflect::{ReflectDeserialize, ReflectSerialize};
+use bevy_reflect::{ ReflectDeserialize, ReflectSerialize };
 
 use bevy_utils::tracing::warn;
 
@@ -67,7 +67,7 @@ impl MapEntities for WindowRef {
                 *entity = entity_mapper.map_entity(*entity);
             }
             Self::Primary => {}
-        };
+        }
     }
 }
 
@@ -424,8 +424,9 @@ impl Window {
     /// See [`WindowResolution`] for an explanation about logical/physical sizes.
     #[inline]
     pub fn cursor_position(&self) -> Option<Vec2> {
-        self.physical_cursor_position()
-            .map(|position| (position.as_dvec2() / self.scale_factor() as f64).as_vec2())
+        self.physical_cursor_position().map(|position|
+            (position.as_dvec2() / (self.scale_factor() as f64)).as_vec2()
+        )
     }
 
     /// The cursor position in this window in physical pixels.
@@ -437,10 +438,11 @@ impl Window {
     pub fn physical_cursor_position(&self) -> Option<Vec2> {
         match self.internal.physical_cursor_position {
             Some(position) => {
-                if position.x >= 0.
-                    && position.y >= 0.
-                    && position.x < self.physical_width() as f64
-                    && position.y < self.physical_height() as f64
+                if
+                    position.x >= 0.0 &&
+                    position.y >= 0.0 &&
+                    position.x < (self.physical_width() as f64) &&
+                    position.y < (self.physical_height() as f64)
                 {
                     Some(position.as_vec2())
                 } else {
@@ -455,8 +457,9 @@ impl Window {
     ///
     /// See [`WindowResolution`] for an explanation about logical/physical sizes.
     pub fn set_cursor_position(&mut self, position: Option<Vec2>) {
-        self.internal.physical_cursor_position =
-            position.map(|p| p.as_dvec2() * self.scale_factor() as f64);
+        self.internal.physical_cursor_position = position.map(
+            |p| p.as_dvec2() * (self.scale_factor() as f64)
+        );
     }
 
     /// Set the cursor position in this window in physical pixels.
@@ -496,8 +499,8 @@ pub struct WindowResizeConstraints {
 impl Default for WindowResizeConstraints {
     fn default() -> Self {
         Self {
-            min_width: 180.,
-            min_height: 120.,
+            min_width: 180.0,
+            min_height: 120.0,
             max_width: f32::INFINITY,
             max_height: f32::INFINITY,
         }
@@ -516,19 +519,21 @@ impl WindowResizeConstraints {
             mut max_width,
             mut max_height,
         } = self;
-        min_width = min_width.max(1.);
-        min_height = min_height.max(1.);
+        min_width = min_width.max(1.0);
+        min_height = min_height.max(1.0);
         if max_width < min_width {
             warn!(
                 "The given maximum width {} is smaller than the minimum width {}",
-                max_width, min_width
+                max_width,
+                min_width
             );
             max_width = min_width;
         }
         if max_height < min_height {
             warn!(
                 "The given maximum height {} is smaller than the minimum height {}",
-                max_height, min_height
+                max_height,
+                min_height
             );
             max_height = min_height;
         }
@@ -735,13 +740,13 @@ impl WindowResolution {
     /// The window's client area width in logical pixels.
     #[inline]
     pub fn width(&self) -> f32 {
-        self.physical_width() as f32 / self.scale_factor()
+        (self.physical_width() as f32) / self.scale_factor()
     }
 
     /// The window's client area height in logical pixels.
     #[inline]
     pub fn height(&self) -> f32 {
-        self.physical_height() as f32 / self.scale_factor()
+        (self.physical_height() as f32) / self.scale_factor()
     }
 
     /// The window's client size in logical pixels
@@ -772,8 +777,7 @@ impl WindowResolution {
     ///
     /// `physical_pixels = logical_pixels * scale_factor`
     pub fn scale_factor(&self) -> f32 {
-        self.scale_factor_override
-            .unwrap_or_else(|| self.base_scale_factor())
+        self.scale_factor_override.unwrap_or_else(|| self.base_scale_factor())
     }
 
     /// The window scale factor as reported by the window backend.
@@ -797,7 +801,7 @@ impl WindowResolution {
     pub fn set(&mut self, width: f32, height: f32) {
         self.set_physical_resolution(
             (width * self.scale_factor()) as u32,
-            (height * self.scale_factor()) as u32,
+            (height * self.scale_factor()) as u32
         );
     }
 
@@ -825,8 +829,8 @@ impl WindowResolution {
     #[doc(hidden)]
     pub fn set_scale_factor_and_apply_to_physical_size(&mut self, scale_factor: f32) {
         self.scale_factor = scale_factor;
-        self.physical_width = (self.physical_width as f32 * scale_factor) as u32;
-        self.physical_height = (self.physical_height as f32 * scale_factor) as u32;
+        self.physical_width = ((self.physical_width as f32) * scale_factor) as u32;
+        self.physical_height = ((self.physical_height as f32) * scale_factor) as u32;
     }
 
     /// Set the window's scale factor, this will be used over what the backend decides.
@@ -839,19 +843,13 @@ impl WindowResolution {
     }
 }
 
-impl<I> From<(I, I)> for WindowResolution
-where
-    I: Into<f32>,
-{
+impl<I> From<(I, I)> for WindowResolution where I: Into<f32> {
     fn from((width, height): (I, I)) -> WindowResolution {
         WindowResolution::new(width.into(), height.into())
     }
 }
 
-impl<I> From<[I; 2]> for WindowResolution
-where
-    I: Into<f32>,
-{
+impl<I> From<[I; 2]> for WindowResolution where I: Into<f32> {
     fn from([width, height]: [I; 2]) -> WindowResolution {
         WindowResolution::new(width.into(), height.into())
     }
@@ -1224,27 +1222,21 @@ mod tests {
     #[test]
     fn cursor_position_within_window_bounds() {
         let mut window = Window {
-            resolution: WindowResolution::new(800., 600.),
+            resolution: WindowResolution::new(800.0, 600.0),
             ..Default::default()
         };
 
-        window.set_physical_cursor_position(Some(DVec2::new(0., 300.)));
-        assert_eq!(window.physical_cursor_position(), Some(Vec2::new(0., 300.)));
+        window.set_physical_cursor_position(Some(DVec2::new(0.0, 300.0)));
+        assert_eq!(window.physical_cursor_position(), Some(Vec2::new(0.0, 300.0)));
 
-        window.set_physical_cursor_position(Some(DVec2::new(400., 0.)));
-        assert_eq!(window.physical_cursor_position(), Some(Vec2::new(400., 0.)));
+        window.set_physical_cursor_position(Some(DVec2::new(400.0, 0.0)));
+        assert_eq!(window.physical_cursor_position(), Some(Vec2::new(400.0, 0.0)));
 
-        window.set_physical_cursor_position(Some(DVec2::new(799.999, 300.)));
-        assert_eq!(
-            window.physical_cursor_position(),
-            Some(Vec2::new(799.999, 300.)),
-        );
+        window.set_physical_cursor_position(Some(DVec2::new(799.999, 300.0)));
+        assert_eq!(window.physical_cursor_position(), Some(Vec2::new(799.999, 300.0)));
 
-        window.set_physical_cursor_position(Some(DVec2::new(400., 599.999)));
-        assert_eq!(
-            window.physical_cursor_position(),
-            Some(Vec2::new(400., 599.999))
-        );
+        window.set_physical_cursor_position(Some(DVec2::new(400.0, 599.999)));
+        assert_eq!(window.physical_cursor_position(), Some(Vec2::new(400.0, 599.999)));
     }
 
     // Checks that `Window::physical_cursor_position` returns `None` if the cursor position is not
@@ -1252,20 +1244,20 @@ mod tests {
     #[test]
     fn cursor_position_not_within_window_bounds() {
         let mut window = Window {
-            resolution: WindowResolution::new(800., 600.),
+            resolution: WindowResolution::new(800.0, 600.0),
             ..Default::default()
         };
 
-        window.set_physical_cursor_position(Some(DVec2::new(-0.001, 300.)));
+        window.set_physical_cursor_position(Some(DVec2::new(-0.001, 300.0)));
         assert!(window.physical_cursor_position().is_none());
 
-        window.set_physical_cursor_position(Some(DVec2::new(400., -0.001)));
+        window.set_physical_cursor_position(Some(DVec2::new(400.0, -0.001)));
         assert!(window.physical_cursor_position().is_none());
 
-        window.set_physical_cursor_position(Some(DVec2::new(800., 300.)));
+        window.set_physical_cursor_position(Some(DVec2::new(800.0, 300.0)));
         assert!(window.physical_cursor_position().is_none());
 
-        window.set_physical_cursor_position(Some(DVec2::new(400., 600.)));
+        window.set_physical_cursor_position(Some(DVec2::new(400.0, 600.0)));
         assert!(window.physical_cursor_position().is_none());
     }
 }

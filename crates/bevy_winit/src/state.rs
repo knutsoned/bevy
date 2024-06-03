@@ -1,18 +1,18 @@
 use approx::relative_eq;
-use bevy_app::{App, AppExit, PluginsState};
-use bevy_ecs::change_detection::{DetectChanges, NonSendMut, Res};
+use bevy_app::{ App, AppExit, PluginsState };
+use bevy_ecs::change_detection::{ DetectChanges, NonSendMut, Res };
 use bevy_ecs::entity::Entity;
-use bevy_ecs::event::{EventWriter, ManualEventReader};
+use bevy_ecs::event::{ EventWriter, ManualEventReader };
 use bevy_ecs::prelude::*;
 use bevy_ecs::system::SystemState;
 use bevy_ecs::world::FromWorld;
 use bevy_input::{
     gestures::*,
     keyboard::KeyboardFocusLost,
-    mouse::{MouseButtonInput, MouseMotion, MouseScrollUnit, MouseWheel},
+    mouse::{ MouseButtonInput, MouseMotion, MouseScrollUnit, MouseWheel },
 };
-use bevy_log::{error, trace, warn};
-use bevy_math::{ivec2, DVec2, Vec2};
+use bevy_log::{ error, trace, warn };
+use bevy_math::{ ivec2, DVec2, Vec2 };
 #[cfg(not(target_arch = "wasm32"))]
 use bevy_tasks::tick_global_task_pools_on_main_thread;
 use bevy_utils::Instant;
@@ -20,25 +20,45 @@ use std::marker::PhantomData;
 use winit::application::ApplicationHandler;
 use winit::dpi::PhysicalSize;
 use winit::event;
-use winit::event::{DeviceEvent, DeviceId, StartCause, WindowEvent};
-use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
+use winit::event::{ DeviceEvent, DeviceId, StartCause, WindowEvent };
+use winit::event_loop::{ ActiveEventLoop, ControlFlow, EventLoop };
 use winit::window::WindowId;
 
 #[allow(deprecated)]
 use bevy_window::{
-    AppLifecycle, CursorEntered, CursorLeft, CursorMoved, FileDragAndDrop, Ime, ReceivedCharacter,
-    RequestRedraw, Window, WindowBackendScaleFactorChanged, WindowCloseRequested, WindowDestroyed,
-    WindowFocused, WindowMoved, WindowOccluded, WindowResized, WindowScaleFactorChanged,
+    AppLifecycle,
+    CursorEntered,
+    CursorLeft,
+    CursorMoved,
+    FileDragAndDrop,
+    Ime,
+    ReceivedCharacter,
+    RequestRedraw,
+    Window,
+    WindowBackendScaleFactorChanged,
+    WindowCloseRequested,
+    WindowDestroyed,
+    WindowFocused,
+    WindowMoved,
+    WindowOccluded,
+    WindowResized,
+    WindowScaleFactorChanged,
     WindowThemeChanged,
 };
 #[cfg(target_os = "android")]
-use bevy_window::{PrimaryWindow, RawHandleWrapper};
+use bevy_window::{ PrimaryWindow, RawHandleWrapper };
 
 use crate::accessibility::AccessKitAdapters;
 use crate::system::CachedWindow;
 use crate::{
-    converters, create_windows, AppSendEvent, CreateWindowParams, UpdateMode, WinitEvent,
-    WinitSettings, WinitWindows,
+    converters,
+    create_windows,
+    AppSendEvent,
+    CreateWindowParams,
+    UpdateMode,
+    WinitEvent,
+    WinitSettings,
+    WinitWindows,
 };
 
 /// Persistent state that is used to run the [`App`] according to the current
@@ -71,28 +91,32 @@ struct WinitAppRunnerState<T: Event> {
     winit_events: Vec<WinitEvent>,
     _marker: PhantomData<T>,
 
-    event_writer_system_state: SystemState<(
-        EventWriter<'static, WindowResized>,
-        EventWriter<'static, WindowBackendScaleFactorChanged>,
-        EventWriter<'static, WindowScaleFactorChanged>,
-        NonSend<'static, WinitWindows>,
-        Query<'static, 'static, (&'static mut Window, &'static mut CachedWindow)>,
-        NonSendMut<'static, AccessKitAdapters>,
-    )>,
+    event_writer_system_state: SystemState<
+        (
+            EventWriter<'static, WindowResized>,
+            EventWriter<'static, WindowBackendScaleFactorChanged>,
+            EventWriter<'static, WindowScaleFactorChanged>,
+            NonSend<'static, WinitWindows>,
+            Query<'static, 'static, (&'static mut Window, &'static mut CachedWindow)>,
+            NonSendMut<'static, AccessKitAdapters>,
+        )
+    >,
 }
 
 impl<T: Event> WinitAppRunnerState<T> {
     fn new(mut app: App) -> Self {
         app.add_event::<T>();
 
-        let event_writer_system_state: SystemState<(
-            EventWriter<WindowResized>,
-            EventWriter<WindowBackendScaleFactorChanged>,
-            EventWriter<WindowScaleFactorChanged>,
-            NonSend<WinitWindows>,
-            Query<(&mut Window, &mut CachedWindow)>,
-            NonSendMut<AccessKitAdapters>,
-        )> = SystemState::new(app.world_mut());
+        let event_writer_system_state: SystemState<
+            (
+                EventWriter<WindowResized>,
+                EventWriter<WindowBackendScaleFactorChanged>,
+                EventWriter<WindowScaleFactorChanged>,
+                NonSend<WinitWindows>,
+                Query<(&mut Window, &mut CachedWindow)>,
+                NonSendMut<AccessKitAdapters>,
+            )
+        > = SystemState::new(app.world_mut());
 
         Self {
             app,
@@ -135,7 +159,7 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
         }
 
         #[cfg(feature = "trace")]
-        let _span = bevy_utils::tracing::info_span!("winit event_handler").entered();
+        let _span = bevy_utils::tracing::info_span("winit event_handler").entered();
 
         if self.app.plugins_state() != PluginsState::Cleaned {
             if self.app.plugins_state() != PluginsState::Ready {
@@ -149,10 +173,7 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
         }
 
         self.wait_elapsed = match cause {
-            StartCause::WaitCancelled {
-                requested_resume: Some(resume),
-                ..
-            } => {
+            StartCause::WaitCancelled { requested_resume: Some(resume), .. } => {
                 // If the resume time is not after now, it means that at least the wait timeout
                 // has elapsed.
                 resume <= Instant::now()
@@ -178,7 +199,7 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
         &mut self,
         _event_loop: &ActiveEventLoop,
         window_id: WindowId,
-        event: WindowEvent,
+        event: WindowEvent
     ) {
         self.window_event_received = true;
 
@@ -219,15 +240,11 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
                     &mut win,
                     scale_factor,
                     &mut window_backend_scale_factor_changed,
-                    &mut window_scale_factor_changed,
+                    &mut window_scale_factor_changed
                 );
             }
             WindowEvent::CloseRequested => self.winit_events.send(WindowCloseRequested { window }),
-            WindowEvent::KeyboardInput {
-                ref event,
-                is_synthetic,
-                ..
-            } => {
+            WindowEvent::KeyboardInput { ref event, is_synthetic, .. } => {
                 // Winit sends "synthetic" key press events when the window gains focus. These
                 // should not be handled, so we only process key events if they are not synthetic
                 // key presses. "synthetic" key release events should still be handled though, for
@@ -241,8 +258,7 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
                             self.winit_events.send(ReceivedCharacter { window, char });
                         }
                     }
-                    self.winit_events
-                        .send(converters::convert_keyboard_input(event, window));
+                    self.winit_events.send(converters::convert_keyboard_input(event, window));
                 }
             }
             WindowEvent::CursorMoved { position, .. } => {
@@ -254,7 +270,9 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
                 });
 
                 win.set_physical_cursor_position(Some(physical_position));
-                let position = (physical_position / win.resolution.scale_factor() as f64).as_vec2();
+                let position = (
+                    physical_position / (win.resolution.scale_factor() as f64)
+                ).as_vec2();
                 self.winit_events.send(CursorMoved {
                     window,
                     position,
@@ -285,35 +303,35 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
                 self.winit_events.send(DoubleTapGesture);
             }
             WindowEvent::PanGesture { delta, .. } => {
-                self.winit_events.send(PanGesture(Vec2 {
-                    x: delta.x,
-                    y: delta.y,
-                }));
+                self.winit_events.send(
+                    PanGesture(Vec2 {
+                        x: delta.x,
+                        y: delta.y,
+                    })
+                );
             }
-            WindowEvent::MouseWheel { delta, .. } => match delta {
-                event::MouseScrollDelta::LineDelta(x, y) => {
-                    self.winit_events.send(MouseWheel {
-                        unit: MouseScrollUnit::Line,
-                        x,
-                        y,
-                        window,
-                    });
+            WindowEvent::MouseWheel { delta, .. } =>
+                match delta {
+                    event::MouseScrollDelta::LineDelta(x, y) => {
+                        self.winit_events.send(MouseWheel {
+                            unit: MouseScrollUnit::Line,
+                            x,
+                            y,
+                            window,
+                        });
+                    }
+                    event::MouseScrollDelta::PixelDelta(p) => {
+                        self.winit_events.send(MouseWheel {
+                            unit: MouseScrollUnit::Pixel,
+                            x: p.x as f32,
+                            y: p.y as f32,
+                            window,
+                        });
+                    }
                 }
-                event::MouseScrollDelta::PixelDelta(p) => {
-                    self.winit_events.send(MouseWheel {
-                        unit: MouseScrollUnit::Pixel,
-                        x: p.x as f32,
-                        y: p.y as f32,
-                        window,
-                    });
-                }
-            },
             WindowEvent::Touch(touch) => {
-                let location = touch
-                    .location
-                    .to_logical(win.resolution.scale_factor() as f64);
-                self.winit_events
-                    .send(converters::convert_touch_input(touch, location, window));
+                let location = touch.location.to_logical(win.resolution.scale_factor() as f64);
+                self.winit_events.send(converters::convert_touch_input(touch, location, window));
             }
             WindowEvent::Focused(focused) => {
                 win.focused = focused;
@@ -326,40 +344,38 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
                 self.winit_events.send(WindowOccluded { window, occluded });
             }
             WindowEvent::DroppedFile(path_buf) => {
-                self.winit_events
-                    .send(FileDragAndDrop::DroppedFile { window, path_buf });
+                self.winit_events.send(FileDragAndDrop::DroppedFile { window, path_buf });
             }
             WindowEvent::HoveredFile(path_buf) => {
-                self.winit_events
-                    .send(FileDragAndDrop::HoveredFile { window, path_buf });
+                self.winit_events.send(FileDragAndDrop::HoveredFile { window, path_buf });
             }
             WindowEvent::HoveredFileCancelled => {
-                self.winit_events
-                    .send(FileDragAndDrop::HoveredFileCanceled { window });
+                self.winit_events.send(FileDragAndDrop::HoveredFileCanceled { window });
             }
             WindowEvent::Moved(position) => {
                 let position = ivec2(position.x, position.y);
                 win.position.set(position);
                 self.winit_events.send(WindowMoved { window, position });
             }
-            WindowEvent::Ime(event) => match event {
-                event::Ime::Preedit(value, cursor) => {
-                    self.winit_events.send(Ime::Preedit {
-                        window,
-                        value,
-                        cursor,
-                    });
+            WindowEvent::Ime(event) =>
+                match event {
+                    event::Ime::Preedit(value, cursor) => {
+                        self.winit_events.send(Ime::Preedit {
+                            window,
+                            value,
+                            cursor,
+                        });
+                    }
+                    event::Ime::Commit(value) => {
+                        self.winit_events.send(Ime::Commit { window, value });
+                    }
+                    event::Ime::Enabled => {
+                        self.winit_events.send(Ime::Enabled { window });
+                    }
+                    event::Ime::Disabled => {
+                        self.winit_events.send(Ime::Disabled { window });
+                    }
                 }
-                event::Ime::Commit(value) => {
-                    self.winit_events.send(Ime::Commit { window, value });
-                }
-                event::Ime::Enabled => {
-                    self.winit_events.send(Ime::Enabled { window });
-                }
-                event::Ime::Disabled => {
-                    self.winit_events.send(Ime::Disabled { window });
-                }
-            },
             WindowEvent::ThemeChanged(theme) => {
                 self.winit_events.send(WindowThemeChanged {
                     window,
@@ -384,7 +400,7 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
         &mut self,
         _event_loop: &ActiveEventLoop,
         _device_id: DeviceId,
-        event: DeviceEvent,
+        event: DeviceEvent
     ) {
         self.device_event_received = true;
 
@@ -397,15 +413,17 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
         // create any new windows
         // (even if app did not update, some may have been created by plugin setup)
-        let mut create_window =
-            SystemState::<CreateWindowParams<Added<Window>>>::from_world(self.world_mut());
+        let mut create_window = SystemState::<CreateWindowParams<Added<Window>>>::from_world(
+            self.world_mut()
+        );
         create_windows(event_loop, create_window.get_mut(self.world_mut()));
         create_window.apply(self.world_mut());
 
         let mut redraw_event_reader = ManualEventReader::<RequestRedraw>::default();
 
-        let mut focused_windows_state: SystemState<(Res<WinitSettings>, Query<(Entity, &Window)>)> =
-            SystemState::new(self.world_mut());
+        let mut focused_windows_state: SystemState<
+            (Res<WinitSettings>, Query<(Entity, &Window)>)
+        > = SystemState::new(self.world_mut());
 
         if let Some(app_redraw_events) = self.world().get_resource::<Events<RequestRedraw>>() {
             if redraw_event_reader.read(app_redraw_events).last().is_some() {
@@ -434,13 +452,9 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
             {
                 // Remove the `RawHandleWrapper` from the primary window.
                 // This will trigger the surface destruction.
-                let mut query = self
-                    .world_mut()
-                    .query_filtered::<Entity, With<PrimaryWindow>>();
+                let mut query = self.world_mut().query_filtered::<Entity, With<PrimaryWindow>>();
                 let entity = query.single(&self.world());
-                self.world_mut()
-                    .entity_mut(entity)
-                    .remove::<RawHandleWrapper>();
+                self.world_mut().entity_mut(entity).remove::<RawHandleWrapper>();
             }
         }
 
@@ -455,13 +469,18 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
             {
                 // Get windows that are cached but without raw handles. Those window were already created, but got their
                 // handle wrapper removed when the app was suspended.
-                let mut query = self.world_mut()
-                    .query_filtered::<(Entity, &Window), (With<CachedWindow>, Without<bevy_window::RawHandleWrapper>)>();
+                let mut query = self
+                    .world_mut()
+                    .query_filtered::<
+                        (Entity, &Window),
+                        (With<CachedWindow>, Without<bevy_window::RawHandleWrapper>)
+                    >();
                 if let Ok((entity, window)) = query.get_single(&self.world()) {
                     let window = window.clone();
 
-                    let mut create_window =
-                        SystemState::<CreateWindowParams>::from_world(self.world_mut());
+                    let mut create_window = SystemState::<CreateWindowParams>::from_world(
+                        self.world_mut()
+                    );
 
                     let (
                         ..,
@@ -477,7 +496,7 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
                         &window,
                         &mut adapters,
                         &mut handlers,
-                        &accessibility_requested,
+                        &accessibility_requested
                     );
 
                     let wrapper = RawHandleWrapper::new(winit_window).unwrap();
@@ -524,25 +543,34 @@ impl<T: Event> ApplicationHandler<T> for WinitAppRunnerState<T> {
                 // we cannot use the visibility to drive rendering on these platforms
                 // so we cannot discern whether to beneficially use `Poll` or not?
                 cfg_if::cfg_if! {
-                    if #[cfg(not(any(
-                        target_arch = "wasm32",
-                        target_os = "android",
-                        target_os = "ios",
-                        all(target_os = "linux", any(feature = "x11", feature = "wayland"))
-                    )))]
+                    if
+                        #[cfg(
+                            not(
+                                any(
+                                    target_arch = "wasm32",
+                                    target_os = "android",
+                                    target_os = "ios",
+                                    all(
+                                        target_os = "linux",
+                                        any(feature = "x11", feature = "wayland")
+                                    )
+                                )
+                            )
+                        )]
                     {
                         let winit_windows = self.world().non_send_resource::<WinitWindows>();
-                        let visible = winit_windows.windows.iter().any(|(_, w)| {
-                            w.is_visible().unwrap_or(false)
-                        });
+                        let visible = winit_windows.windows
+                            .iter()
+                            .any(|(_, w)| { w.is_visible().unwrap_or(false) });
 
-                        event_loop.set_control_flow(if visible {
-                            ControlFlow::Wait
-                        } else {
-                            ControlFlow::Poll
-                        });
-                    }
-                    else {
+                        event_loop.set_control_flow(
+                            if visible {
+                                ControlFlow::Wait
+                            } else {
+                                ControlFlow::Poll
+                            }
+                        );
+                    } else {
                         event_loop.set_control_flow(ControlFlow::Wait);
                     }
                 }
@@ -593,10 +621,10 @@ impl<T: Event> WinitAppRunnerState<T> {
     fn should_update(&self, update_mode: UpdateMode) -> bool {
         let handle_event = match update_mode {
             UpdateMode::Continuous => {
-                self.wait_elapsed
-                    || self.user_event_received
-                    || self.window_event_received
-                    || self.device_event_received
+                self.wait_elapsed ||
+                    self.user_event_received ||
+                    self.window_event_received ||
+                    self.device_event_received
             }
             UpdateMode::Reactive {
                 react_to_device_events,
@@ -604,10 +632,10 @@ impl<T: Event> WinitAppRunnerState<T> {
                 react_to_window_events,
                 ..
             } => {
-                self.wait_elapsed
-                    || (react_to_device_events && self.device_event_received)
-                    || (react_to_user_events && self.user_event_received)
-                    || (react_to_window_events && self.window_event_received)
+                self.wait_elapsed ||
+                    (react_to_device_events && self.device_event_received) ||
+                    (react_to_user_events && self.user_event_received) ||
+                    (react_to_window_events && self.window_event_received)
             }
         };
 
@@ -722,9 +750,7 @@ impl<T: Event> WinitAppRunnerState<T> {
             }
         }
 
-        world
-            .resource_mut::<Events<WinitEvent>>()
-            .send_batch(buffered_events);
+        world.resource_mut::<Events<WinitEvent>>().send_batch(buffered_events);
     }
 }
 
@@ -738,13 +764,9 @@ pub fn winit_runner<T: Event>(mut app: App) -> AppExit {
         app.cleanup();
     }
 
-    let event_loop = app
-        .world_mut()
-        .remove_non_send_resource::<EventLoop<T>>()
-        .unwrap();
+    let event_loop = app.world_mut().remove_non_send_resource::<EventLoop<T>>().unwrap();
 
-    app.world_mut()
-        .insert_non_send_resource(event_loop.create_proxy());
+    app.world_mut().insert_non_send_resource(event_loop.create_proxy());
 
     let mut runner_state = WinitAppRunnerState::new(app);
 
@@ -765,11 +787,9 @@ pub(crate) fn react_to_resize(
     window_entity: Entity,
     window: &mut Mut<'_, Window>,
     size: PhysicalSize<u32>,
-    window_resized: &mut EventWriter<WindowResized>,
+    window_resized: &mut EventWriter<WindowResized>
 ) {
-    window
-        .resolution
-        .set_physical_resolution(size.width, size.height);
+    window.resolution.set_physical_resolution(size.width, size.height);
 
     window_resized.send(WindowResized {
         window: window_entity,
@@ -783,7 +803,7 @@ pub(crate) fn react_to_scale_factor_change(
     window: &mut Mut<'_, Window>,
     scale_factor: f64,
     window_backend_scale_factor_changed: &mut EventWriter<WindowBackendScaleFactorChanged>,
-    window_scale_factor_changed: &mut EventWriter<WindowScaleFactorChanged>,
+    window_scale_factor_changed: &mut EventWriter<WindowScaleFactorChanged>
 ) {
     window.resolution.set_scale_factor(scale_factor as f32);
 

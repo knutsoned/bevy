@@ -7,16 +7,30 @@ use bevy_input::touch::TouchInput;
 use bevy_input::{
     gestures::*,
     keyboard::KeyboardFocusLost,
-    mouse::{MouseButtonInput, MouseMotion, MouseWheel},
+    mouse::{ MouseButtonInput, MouseMotion, MouseWheel },
 };
 use bevy_reflect::Reflect;
 #[cfg(feature = "serialize")]
-use bevy_reflect::{ReflectDeserialize, ReflectSerialize};
+use bevy_reflect::{ ReflectDeserialize, ReflectSerialize };
 use bevy_window::{
-    AppLifecycle, CursorEntered, CursorLeft, CursorMoved, FileDragAndDrop, Ime, ReceivedCharacter,
-    RequestRedraw, WindowBackendScaleFactorChanged, WindowCloseRequested, WindowCreated,
-    WindowDestroyed, WindowFocused, WindowMoved, WindowOccluded, WindowResized,
-    WindowScaleFactorChanged, WindowThemeChanged,
+    AppLifecycle,
+    CursorEntered,
+    CursorLeft,
+    CursorMoved,
+    FileDragAndDrop,
+    Ime,
+    ReceivedCharacter,
+    RequestRedraw,
+    WindowBackendScaleFactorChanged,
+    WindowCloseRequested,
+    WindowCreated,
+    WindowDestroyed,
+    WindowFocused,
+    WindowMoved,
+    WindowOccluded,
+    WindowResized,
+    WindowScaleFactorChanged,
+    WindowThemeChanged,
 };
 
 /// Wraps all `bevy_window` events in a common enum.
