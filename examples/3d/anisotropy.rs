@@ -78,14 +78,14 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, app_status: Res
         ..default()
     });
 
-    spawn_text(&mut commands, &app_status);
+    spawn_text(&mut commands, &asset_server, &app_status);
 }
 
 /// Spawns the help text.
-fn spawn_text(commands: &mut Commands, app_status: &AppStatus) {
+fn spawn_text(commands: &mut Commands, asset_server: &AssetServer, app_status: &AppStatus) {
     commands.spawn(
         TextBundle {
-            text: app_status.create_help_text(),
+            text: app_status.create_help_text(asset_server),
             ..default()
         }
         .with_style(Style {
@@ -223,9 +223,19 @@ fn handle_input(
 }
 
 /// A system that updates the help text based on the current app status.
+<<<<<<< HEAD
 fn update_help_text(mut text_query: Query<&mut Text>, app_status: Res<AppStatus>) {
     for mut text in text_query.iter_mut() {
         *text = app_status.create_help_text();
+=======
+fn update_help_text(
+    mut text_query: Query<&mut Text>,
+    app_status: Res<AppStatus>,
+    asset_server: Res<AssetServer>,
+) {
+    for mut text in text_query.iter_mut() {
+        *text = app_status.create_help_text(&asset_server);
+>>>>>>> ef156ebb0 (Implement PBR anisotropy per `KHR_materials_anisotropy`. (#13450))
     }
 }
 
@@ -274,7 +284,11 @@ fn spawn_point_light(commands: &mut Commands) {
 
 impl AppStatus {
     /// Creates the help text as appropriate for the current app status.
+<<<<<<< HEAD
     fn create_help_text(&self) -> Text {
+=======
+    fn create_help_text(&self, asset_server: &AssetServer) -> Text {
+>>>>>>> ef156ebb0 (Implement PBR anisotropy per `KHR_materials_anisotropy`. (#13450))
         // Choose the appropriate help text for the anisotropy toggle.
         let material_variant_help_text = if self.anisotropy_enabled {
             "Press Enter to disable anisotropy"
@@ -292,7 +306,15 @@ impl AppStatus {
         // Build the `Text` object.
         Text::from_section(
             format!("{}\n{}", material_variant_help_text, light_help_text),
+<<<<<<< HEAD
             TextStyle::default(),
+=======
+            TextStyle {
+                font: asset_server.load("fonts/FiraMono-Medium.ttf"),
+                font_size: 24.0,
+                ..default()
+            },
+>>>>>>> ef156ebb0 (Implement PBR anisotropy per `KHR_materials_anisotropy`. (#13450))
         )
     }
 }
