@@ -186,6 +186,9 @@ bevy_picking = ["dep:bevy_picking"]
 # Enable support for the Bevy Remote Protocol
 bevy_remote = ["dep:bevy_remote"]
 
+# Provides a picking functionality
+bevy_picking = ["dep:bevy_picking"]
+
 # Enable support for the ios_simulator by downgrading some rendering capabilities
 ios_simulator = ["bevy_pbr?/ios_simulator", "bevy_render?/ios_simulator"]
 
@@ -227,19 +230,13 @@ bevy_gizmos = { path = "../bevy_gizmos", optional = true, version = "0.14.0-dev"
 bevy_gltf = { path = "../bevy_gltf", optional = true, version = "0.14.0-dev" }
 bevy_pbr = { path = "../bevy_pbr", optional = true, version = "0.14.0-dev" }
 bevy_picking = { path = "../bevy_picking", optional = true, version = "0.14.0-dev" }
+bevy_remote = { path = "../bevy_remote", optional = true, version = "0.14.0-dev" }
 bevy_render = { path = "../bevy_render", optional = true, version = "0.14.0-dev" }
 bevy_scene = { path = "../bevy_scene", optional = true, version = "0.14.0-dev" }
 bevy_sprite = { path = "../bevy_sprite", optional = true, version = "0.14.0-dev" }
 bevy_text = { path = "../bevy_text", optional = true, version = "0.14.0-dev" }
 bevy_ui = { path = "../bevy_ui", optional = true, version = "0.14.0-dev" }
 bevy_winit = { path = "../bevy_winit", optional = true, version = "0.14.0-dev" }
-<<<<<<< HEAD
-=======
-bevy_gilrs = { path = "../bevy_gilrs", optional = true, version = "0.14.0-dev" }
-bevy_gizmos = { path = "../bevy_gizmos", optional = true, version = "0.14.0-dev", default-features = false }
-bevy_dev_tools = { path = "../bevy_dev_tools", optional = true, version = "0.14.0-dev" }
-bevy_remote = { path = "../bevy_remote", optional = true, version = "0.14.0-dev" }
->>>>>>> a1884a35c (Implement the Bevy Remote Protocol (BRP).)
 
 [lints]
 workspace = true
