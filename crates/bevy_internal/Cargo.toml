@@ -186,9 +186,6 @@ bevy_picking = ["dep:bevy_picking"]
 # Enable support for the Bevy Remote Protocol
 bevy_remote = ["dep:bevy_remote"]
 
-# Provides a picking functionality
-bevy_picking = ["dep:bevy_picking"]
-
 # Enable support for the ios_simulator by downgrading some rendering capabilities
 ios_simulator = ["bevy_pbr?/ios_simulator", "bevy_render?/ios_simulator"]
 
