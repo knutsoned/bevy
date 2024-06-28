@@ -186,7 +186,7 @@ pub struct BrpEntityResponse {
 
 /// The response to a `GET` request.
 #[derive(Serialize, Deserialize, Clone)]
-struct BrpGetResponse {
+pub struct BrpGetResponse {
     /// The ID of the entity for which components were requested.
     entity: Entity,
 
@@ -196,7 +196,7 @@ struct BrpGetResponse {
 
 /// The response to a `LIST` request.
 #[derive(Serialize, Deserialize, Clone)]
-struct BrpListResponse {
+pub struct BrpListResponse {
     /// The ID of the entity for which component names were requested, if
     /// present.
     ///
@@ -210,7 +210,7 @@ struct BrpListResponse {
 
 /// The response to a `QUERY` request.
 #[derive(Serialize, Deserialize, Clone)]
-struct BrpQueryResponse {
+pub struct BrpQueryResponse {
     /// All results of the query: the entities and the requested components.
     rows: Vec<BrpQueryRow>,
 }
