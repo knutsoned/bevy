@@ -570,11 +570,14 @@ fn deserialize_components(
         let Some(component_type) = type_registry.get_with_type_path(&component_path) else {
             return Err(anyhow!("Unknown component type: `{}`", component_path));
         };
-        let reflected: Box<dyn Reflect> =
-            TypedReflectDeserializer::new(component_type, type_registry)
-                .deserialize(&component)
-                .unwrap();
-        reflect_components.push(reflected);
+        match TypedReflectDeserializer::new(component_type, type_registry).deserialize(&component) {
+            Ok(reflected) => {
+                reflect_components.push(reflected);
+            }
+            Err(error) => {
+                return Err(error.into());
+            }
+        }
     }
 
     Ok(reflect_components)
@@ -586,9 +589,14 @@ fn insert_reflected_components(
     reflect_components: Vec<Box<dyn Reflect>>,
 ) -> AnyhowResult<()> {
     for reflected in reflect_components {
-        let reflect_component =
-            get_reflect_component(type_registry, reflected.reflect_type_path())?;
-        reflect_component.insert(&mut entity_world_mut, &*reflected, type_registry);
+        if let Some(represented_type_info) = reflected.get_represented_type_info() {
+            let represented_type_path = represented_type_info.type_path();
+            let reflect_component =
+                get_reflect_component(type_registry, represented_type_path)?;
+            reflect_component.insert(&mut entity_world_mut, &*reflected, type_registry);
+        } else {
+            return Err(anyhow!("Unknown component type (no represented `TypeInfo`): `{}`", reflected.reflect_type_path()));
+        }
     }
     Ok(())
 }
