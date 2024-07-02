@@ -188,10 +188,10 @@ pub struct BrpEntityResponse {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct BrpGetResponse {
     /// The ID of the entity for which components were requested.
-    entity: Entity,
+    pub entity: Entity,
 
     /// The values of the requested components.
-    components: HashMap<String, Value>,
+    pub components: HashMap<String, Value>,
 }
 
 /// The response to a `LIST` request.
@@ -202,17 +202,17 @@ pub struct BrpListResponse {
     ///
     /// If this is `None`, then `components` contains the name of all
     /// reflectable components known to the system.
-    entity: Option<Entity>,
+    pub entity: Option<Entity>,
 
     /// The full type names of the registered components.
-    components: Vec<String>,
+    pub components: Vec<String>,
 }
 
 /// The response to a `QUERY` request.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct BrpQueryResponse {
     /// All results of the query: the entities and the requested components.
-    rows: Vec<BrpQueryRow>,
+    pub rows: Vec<BrpQueryRow>,
 }
 
 /// One query match result: a single entity paired with the requested components.
